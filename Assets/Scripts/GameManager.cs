@@ -16,16 +16,16 @@ public class GameManager : NetworkBehaviour
 
     public enum PlayerType
     {
-        none,
+        None,
         Cross,
         Circle
     }
         
     private PlayerType localPlayerType;
-    private PlayerType currentPlayerType;
 
     public override void OnNetworkSpawn()
     {
+        Debug.Log("OnNetworkSpawn: " + NetworkManager.Singleton.LocalClientId);
         if (NetworkManager.Singleton.LocalClientId == 0)
         {
             localPlayerType = PlayerType.Cross;
@@ -34,11 +34,7 @@ public class GameManager : NetworkBehaviour
         {
             localPlayerType = PlayerType.Circle;
         }
-
-        if(IsServer)
-        {
-            currentPlayerType = PlayerType.Cross;
-        }
+        Debug.Log("Local player type: " + localPlayerType);
 
     }
 
@@ -56,29 +52,12 @@ public class GameManager : NetworkBehaviour
     {
         Debug.Log("Clicked on " + x + ", " + y);
 
-        if(playerType != currentPlayerType)
-        {
-            return;
-        }
-
         OnClickedOnGridPosition?.Invoke(this, new OnClickedOnGridPositionEventArgs
         {
             x = x,
             y = y,
-            playerType = GetLocalPlayerType()
+            playerType = playerType,
         });
-
-        switch(currentPlayerType)
-        {
-            default:
-            case PlayerType.Cross:
-                currentPlayerType = PlayerType.Circle;
-                break;
-            case PlayerType.Circle:
-                currentPlayerType = PlayerType.Cross;
-                break;
-        }
-
     }
     public PlayerType GetLocalPlayerType()
     {

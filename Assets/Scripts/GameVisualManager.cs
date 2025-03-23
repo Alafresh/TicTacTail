@@ -21,8 +21,9 @@ public class GameVisualManager : NetworkBehaviour
     [Rpc(SendTo.Server)]
     private void SpawnObjectRpc(int x, int y, GameManager.PlayerType playerType)
     {
+        Debug.Log(playerType);
         Transform prefab;
-        switch(playerType)
+        switch (playerType)
         {
             default:
             case GameManager.PlayerType.Cross:
