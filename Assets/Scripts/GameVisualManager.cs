@@ -7,15 +7,47 @@ public class GameVisualManager : NetworkBehaviour
 
     [SerializeField] private Transform crossPrefab;
     [SerializeField] private Transform circlePrefab;
+    [SerializeField] private Transform lineCompletePrefab;
 
     private void Start()
     {
         GameManager.Instance.OnClickedOnGridPosition += GameManager_OnClickedOnGridPosition;
+        GameManager.Instance.OnGameWin += GameManager_OnGameWin;
     }
 
     private void GameManager_OnClickedOnGridPosition(object sender, GameManager.OnClickedOnGridPositionEventArgs e)
     {
         SpawnObjectRpc(e.x, e.y, e.playerType);
+    }
+
+    private void GameManager_OnGameWin(object sender, GameManager.OnGameWinEventArgs e)
+    {
+        float eulerZ = 0f;
+
+        switch (e.line.orientation)
+        {
+            default:
+            case GameManager.Orientation.Horizontal:
+                eulerZ = 0f;
+                break;
+            case GameManager.Orientation.Vertical:
+                eulerZ = 90f;
+                break;
+            case GameManager.Orientation.DiagonalA:
+                eulerZ = 45f;
+                break;
+            case GameManager.Orientation.DiagonalB:
+                eulerZ = -45f;
+                break;
+        }
+
+        Transform spawnedLineCompleteTransform = 
+            Instantiate(
+                lineCompletePrefab,
+                GetGridWorldPosition(e.line.centerGridPosition.x, e.line.centerGridPosition.y),
+                Quaternion.Euler(0, 0, eulerZ)
+            );
+        spawnedLineCompleteTransform.GetComponent<NetworkObject>().Spawn(true);
     }
 
     [Rpc(SendTo.Server)]
