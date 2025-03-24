@@ -14,6 +14,9 @@ public class GameManager : NetworkBehaviour
         public PlayerType playerType;
     }
 
+    public event EventHandler OnGameStarted;
+    public event EventHandler OnCurrentPlayerChanged;
+
     public enum PlayerType
     {
         None,
@@ -22,7 +25,7 @@ public class GameManager : NetworkBehaviour
     }
         
     private PlayerType localPlayerType;
-    private PlayerType currentPlayerType;
+    private NetworkVariable<PlayerType> currentPlayerType = new NetworkVariable<PlayerType>();
 
     public override void OnNetworkSpawn()
     {
@@ -35,9 +38,28 @@ public class GameManager : NetworkBehaviour
         }
         
         if (IsServer) {
-            currentPlayerType = PlayerType.Cross;
+            NetworkManager.Singleton.OnClientConnectedCallback += NetworkManager_OnClientConnectedCallback;
         }
 
+        currentPlayerType.OnValueChanged += (PlayerType previousValue, PlayerType newValue) =>
+        {
+            OnCurrentPlayerChanged?.Invoke(this, EventArgs.Empty);
+        };
+    }
+
+    private void NetworkManager_OnClientConnectedCallback(ulong clientId)
+    {
+        if (NetworkManager.Singleton.ConnectedClientsList.Count == 2)
+        {
+            currentPlayerType.Value = PlayerType.Cross;
+            TriggerOnGameStartedRpc();
+        }
+    }
+
+    [Rpc(SendTo.ClientsAndHost)]
+    private void TriggerOnGameStartedRpc()
+    {
+        OnGameStarted?.Invoke(this, EventArgs.Empty);
     }
 
     private void Awake()
@@ -52,7 +74,7 @@ public class GameManager : NetworkBehaviour
     [Rpc(SendTo.Server)]
     public void ClickedOnGridPositionRpc(int x, int y, PlayerType playerType)
     {
-        if(playerType != currentPlayerType)
+        if(playerType != currentPlayerType.Value)
         {
             return;
         }
@@ -63,19 +85,26 @@ public class GameManager : NetworkBehaviour
             y = y,
             playerType = playerType,
         });
-        switch (currentPlayerType)
+        switch (currentPlayerType.Value)
         {
             default:
             case PlayerType.Cross:
-                currentPlayerType = PlayerType.Circle;
+                currentPlayerType.Value = PlayerType.Circle;
                 break;
             case PlayerType.Circle:
-                currentPlayerType = PlayerType.Cross;
+                currentPlayerType.Value = PlayerType.Cross;
                 break;
         }
     }
+
+
+
     public PlayerType GetLocalPlayerType()
     {
         return localPlayerType;
+    }
+    public PlayerType GetCurrentPlayerType()
+    {
+        return currentPlayerType.Value;
     }
 }
