@@ -135,7 +135,6 @@ public class GameManager : NetworkBehaviour
                     new Vector2Int(2, 2)
                 },
                 centerGridPosition = new Vector2Int(1, 1),
-                orientation = Orientation.,
                 orientation = Orientation.DiagonalA,
             },new Line
             {
@@ -144,7 +143,7 @@ public class GameManager : NetworkBehaviour
                     new Vector2Int(1, 1),
                     new Vector2Int(2, 0)
                 },
-                centerGridPosition = new Vector2Int(0, 1),
+                centerGridPosition = new Vector2Int(1, 1),
                 orientation = Orientation.DiagonalB,
             },
         };
